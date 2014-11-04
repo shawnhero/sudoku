@@ -16,7 +16,7 @@ Written by wuxu@cs.ucla.edu
 
 See reference: http://norvig.com/sudoku.html for a detailed explanation of the concepts.
 
-#Improvements
+#Algorithm
 The key algorithm is inspired from the reference. However, there's one improvement based on the search-based constraint propagation.
 
 Here is a simple solution to choose the next key to search. It chooses the one with least number of possible choices.
