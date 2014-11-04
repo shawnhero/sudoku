@@ -27,6 +27,8 @@ class Sudoku():
 
 	count = 0
 
+	searched = None
+
 	def __init__(self, filename=None):
 		# given a filename, initialize the sudoku
 		# replace 0 with 123456789
@@ -112,21 +114,44 @@ class Sudoku():
 				return self.assign(su, places[0], d)
 		return su
 
-	def minLenKey(self,s):
-		# return the next search point of sudoku s
-		# it will be the one with minumum choices
-		return min(s, key=lambda x: len(s[x]) if len(s[x])!=1 else 10)
+	def nextKey(self, su):
+		# return the next search point of sudoku su
+		# the commented line below offers a naive solution, which works well
+		#return min(su, key=lambda x: len(su[x]) if len(su[x])!=1 else 10)
+		# it turns out the way below works slightly better
+		preKeys = self.searched
+		keylist = [(len(su[key]), key) for key in self.squares if len(su[key]) > 1]
+		if not keylist:
+			# all len equal 1, solved
+			return False
+		minnum0, next0 = min(keylist)
+		if not preKeys:
+			# c0 stores all the positions that are not the peer of the searched keys
+			c0 = set(self.squares) - set(sum([list(peers[pkey]) for pkey in preKeys],[]))
+			clist = [(len(su[key]), key) for key in c0 if len(su[key]) > 1]
+			if not clist:
+				# either c0 empty or all solved in c0
+				return next0
+			minnum1, next1 = min(clist)
+			if(minnum0==minnum1):
+				return next1
+		return next0
 		
 	def solve(self):
 		self.count = 0
+		# test the reference code below
+		#return self.search_(self.sudoku)
+
+		self.searched = []
 		# solve the problem
 		# give the initial search point
-		self.sudoku =  self.search(self.sudoku, self.minLenKey(self.sudoku))
+		self.sudoku =  self.search(self.sudoku, self.nextKey(self.sudoku), [])
 		return self.sudoku
 
-	def search(self,values, skey, level=0):
+	def search(self,values, skey, level=0, searched=[]):
 		self.count += 1
-		if(len(values[self.minLenKey(values)])==1):
+		self.searched = searched
+		if self.nextKey(values) is False:
 			## solved! search end
 			return values
 		deads = 0
@@ -134,7 +159,7 @@ class Sudoku():
 			assigned = self.assign(values.copy(), skey, i)
 			if assigned:
 				# continue search
-				result = self.search(assigned, self.minLenKey(assigned), level+1)
+				result = self.search(assigned, self.nextKey(assigned), list(searched).append(skey))
 				if result:
 					return result
 				else:
@@ -155,6 +180,24 @@ class Sudoku():
 			print "I/O error({0}): {1}".format(e.errno, e.strerror)
 		except:
 			print "Unexpected error:", sys.exc_info()[0]
+
+	## note: below is the original code from the reference
+	## uncomment line 143 to use
+	def search_(self,values):
+		self.count += 1
+		if values is False:
+			return False ## Failed earlier
+		if all(len(values[s]) == 1 for s in self.squares): 
+			return values ## Solved!
+		## Chose the unfilled square s with the fewest possibilities
+		n,s = min((len(values[s]), s) for s in self.squares if len(values[s]) > 1)
+		return self.some(self.search_(self.assign(values.copy(), s, d)) for d in values[s])
+
+	def some(self,seq):
+		for e in seq:
+			if e:
+				return e
+		return False
 			
 def test():
 	# calculate the time used
