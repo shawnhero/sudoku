@@ -19,7 +19,7 @@ See reference: http://norvig.com/sudoku.html for a detailed explanation of the c
 #Improvements
 The key algorithm is inspired from the reference. However, there's one improvement based on the search-based constraint propagation.
 
-Here is a simple solution to choose the next key to search. It chooses the one with least possible choices.
+Here is a simple solution to choose the next key to search. It chooses the one with least number of possible choices.
 
 ```
 def nextKey(self, su):
@@ -28,7 +28,7 @@ def nextKey(self, su):
 ```
 
 
-Here is my improved part. Basically it tries to avoid the peers of the previously searched keys.
+Here is the improved part. Basically it tries to avoid the peers of the previously searched keys.
 ```
 def nextKey(self, su):
     # it turns out the way below works slightly better
@@ -51,7 +51,7 @@ def nextKey(self, su):
     return next0
 ```
 
-Using the test cases attaches as a comparision:
+Using the test cases attached as a comparision:
 
     input.csv, simple
         Time Used, 0.0021
