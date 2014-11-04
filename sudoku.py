@@ -118,7 +118,7 @@ class Sudoku():
 	def solve(self):
 		# solve the problem
 		# give the initial search point
-		self.sudoku =  self.search(self.sudoku, self.minLenKey(self.sudoku))
+		self.sudoku =  self.search(self.sudoku.copy(), self.minLenKey(self.sudoku))
 		return self.sudoku
 
 	def search(self,values, skey, level=0):
