@@ -1,5 +1,12 @@
+# Written by wuxu@cs.ucla.edu
+# Reference: http://norvig.com/sudoku.html
+# Key algorithm is inspired from the reference, with code rewrote and refined
+
 import csv
 import sys
+
+import timeit
+
 
 def cross(A, B):
 		return [a+b for a in A for b in B]
@@ -19,10 +26,13 @@ class Sudoku():
 	peers = None
 
 	def __init__(self, filename=None):
+		# given a filename, initialize the sudoku
+		# replace 0 with 123456789
 		self.units = dict([key, [r for r in self.unitlist if key in r]] for key in self.squares)
 		self.peers = dict([key, set(sum(self.units[key],[]))-set([key])] for key in self.squares)
-		with open(filename,'r') as myfile:
-			myfile = csv.reader(myfile)
+		try:
+			csvfile = open(filename,'r')
+			myfile = csv.reader(csvfile)
 			raw = [row for row in myfile]
 			lenraw = [len(row)!=9 for row in raw]
 			# check the format of file
@@ -33,12 +43,19 @@ class Sudoku():
 			print "File Loaded:"
 			self.display(self.sudoku)
 			self.sudoku = dict([key, self.convert(raw[ord(key[0])-ord('A')][int(key[1])-1])] for key in self.squares)
+		except IOError as e:
+			print "I/O error({0}): {1}".format(e.errno, e.strerror)
+			sys.exit(0)
+		except:
+			print "Unexpected error:", sys.exc_info()[0]
+			sys.exit(0)
 
 	def convert(self, str):
 		return str if str!='0' else '123456789'
 
 
 	def clean(self):
+		# first we clean the sudoku by narrowing each unknown fields
 		for key in self.sudoku:
 			if self.sudoku[key] == '123456789':
 				for d in self.peers[key]:
@@ -94,9 +111,13 @@ class Sudoku():
 		return sudoku
 
 	def minLenKey(self,s):
+		# return the next search point of sudoku s
+		# it will be the one with minumum choices
 		return min(s, key=lambda x: len(s[x]) if len(s[x])!=1 else 10)
 		
 	def solve(self):
+		# solve the problem
+		# give the initial search point
 		self.sudoku =  self.search(self.sudoku, self.minLenKey(self.sudoku))
 		return self.sudoku
 
@@ -118,22 +139,40 @@ class Sudoku():
 				deads +=1
 		if deads==len(values[skey]):
 			return False
+
 	def save(self, filename="solution.csv"):
-		with open(filename,'w') as myfile:
+		# save the result
+		try:
+			csvfile = open(filename, 'w')
+			mywriter = csv.writer(csvfile)
+			table = [[self.sudoku[r] for r in cross(r,self.cols)] for r in self.rows]
+			mywriter.writerows(table)
+		except IOError as e:
+			print "I/O error({0}): {1}".format(e.errno, e.strerror)
+		except:
+			print "Unexpected error:", sys.exc_info()[0]
 			
-
-
-
 def test():
+	# calculate the time used
+	start = timeit.default_timer()
+
+	if len(sys.argv)<2:
+		print "Usage: python sudoku [filename]"
+		sys.exit(0)		
 	if sys.argv[1]:
 		filename = sys.argv[1]
+	if len(sys.argv)>2 and sys.argv[2]:
+		output = sys.argv[2]
 	else:
-		print "Usage: python sudoku [filename]"
-		sys.exit(0)
+		output = "solution.csv"
 	sudoku = Sudoku(filename)
 	print "\nSolution:"
 	sudoku.display(sudoku.solve())
-	sudoku.save()
+	sudoku.save(output)
+	print "Solution saved as", output
+
+	stop = timeit.default_timer()
+	print "Time Used,", round(stop - start, 4)
 
 
 if __name__ == "__main__":
