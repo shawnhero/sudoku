@@ -25,6 +25,8 @@ class Sudoku():
 	## peers: dict; key: some square; val: a set of peers
 	peers = None
 
+	count = 0
+
 	def __init__(self, filename=None):
 		# given a filename, initialize the sudoku
 		# replace 0 with 123456789
@@ -73,42 +75,42 @@ class Sudoku():
 			if r in 'CF': print line
 
 	#assign sudoku[key] to be d
-	def assign(self, sudoku, key, d):
+	def assign(self, su, key, d):
 		##print "Assigning ", key, " with value", d
 		# assgining is equal to eliminate all the others one by one
-		allother = sudoku[key].replace(d,'')
+		allother = su[key].replace(d,'')
 		##print allother
-		if all(self.eliminate(sudoku, key, other) for other in allother):
-			return sudoku
+		if all(self.eliminate(su, key, other) for other in allother):
+			return su
 		return False
 		
 			   
 	## do a elimination of d from sudoku[key]
-	def eliminate(self, sudoku, key, d):
-		##print "Eliminating ", d, 'from ', sudoku[key]
-		if d not in sudoku[key]:
+	def eliminate(self, su, key, d):
+		##print "Eliminating ", d, 'from ', su[key]
+		if d not in su[key]:
 			# already elminated
-			return sudoku
-		sudoku[key] = sudoku[key].replace(d, '')
-		##print "Now it becomes", sudoku[key]
-		val = sudoku[key]
+			return su
+		su[key] = su[key].replace(d, '')
+		##print "Now it becomes", su[key]
+		val = su[key]
 		if len(val)==0:
 			##print 'Cannot Eliminate the only value'
 			return False
 		if len(val)==1:
 			# eliminate all the peers
-			if not all(self.eliminate(sudoku, p, val) for p in self.peers[key]):
+			if not all(self.eliminate(su, p, val) for p in self.peers[key]):
 				return False
 		# now we check all the units if some square becomes certain
 		for u in self.units[key]:
-			places = [e for e in u if d in sudoku[e]]
+			places = [e for e in u if d in su[e]]
 			if len(places)==0:
 				##print "Conflict in this unit! No place for ", d
 				return False
 			if len(places)==1:
 				##print "Only one place for ", d, "Assigning.."
-				return self.assign(sudoku, places[0], d)
-		return sudoku
+				return self.assign(su, places[0], d)
+		return su
 
 	def minLenKey(self,s):
 		# return the next search point of sudoku s
@@ -116,12 +118,14 @@ class Sudoku():
 		return min(s, key=lambda x: len(s[x]) if len(s[x])!=1 else 10)
 		
 	def solve(self):
+		self.count = 0
 		# solve the problem
 		# give the initial search point
 		self.sudoku =  self.search(self.sudoku, self.minLenKey(self.sudoku))
 		return self.sudoku
 
 	def search(self,values, skey, level=0):
+		self.count += 1
 		if(len(values[self.minLenKey(values)])==1):
 			## solved! search end
 			return values
@@ -166,6 +170,7 @@ def test():
 	else:
 		output = "solution.csv"
 	sudoku = Sudoku(filename)
+	sudoku.clean()
 	print "\nSolution:"
 	sudoku.display(sudoku.solve())
 	sudoku.save(output)
@@ -173,6 +178,7 @@ def test():
 
 	stop = timeit.default_timer()
 	print "Time Used,", round(stop - start, 4)
+	print "Num of searches,", sudoku.count
 
 
 if __name__ == "__main__":
