@@ -181,23 +181,6 @@ class Sudoku():
 		except:
 			print "Unexpected error:", sys.exc_info()[0]
 
-	## note: below is the original code from the reference
-	## uncomment line 143 to use
-	def search_(self,values):
-		self.count += 1
-		if values is False:
-			return False ## Failed earlier
-		if all(len(values[s]) == 1 for s in self.squares): 
-			return values ## Solved!
-		## Chose the unfilled square s with the fewest possibilities
-		n,s = min((len(values[s]), s) for s in self.squares if len(values[s]) > 1)
-		return self.some(self.search_(self.assign(values.copy(), s, d)) for d in values[s])
-
-	def some(self,seq):
-		for e in seq:
-			if e:
-				return e
-		return False
 			
 def test():
 	# calculate the time used
@@ -214,11 +197,15 @@ def test():
 		output = "solution.csv"
 	sudoku = Sudoku(filename)
 	sudoku.clean()
-	print "\nSolution:"
-	sudoku.display(sudoku.solve())
-	sudoku.save(output)
-	print "Solution saved as", output
-
+	sol = sudoku.solve()
+	if sol:
+		print "\nSolution:"
+		sudoku.display(sol)
+		sudoku.save(output)
+		print "Solution saved as", output
+	else:
+		print "Oops, seems no solution?!"
+		print "File not saved."
 	stop = timeit.default_timer()
 	print "Time Used,", round(stop - start, 4)
 	print "Num of searches,", sudoku.count
